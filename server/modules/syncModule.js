@@ -13,7 +13,6 @@ function matchesLicensedScope(ticket, license) {
 
 async function sendToMiddleware(eventType, ticket, conversation, payload) {
   const body = {
-    accountId: payload.account_id,
     domain: payload.domain,
     eventType: eventType,
     clientTicketId: ticket.id,

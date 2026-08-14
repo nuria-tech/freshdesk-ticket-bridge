@@ -28,13 +28,15 @@ Pontos que valem revisar:
 - **Nenhum segredo ou dado do cliente está hardcoded aqui.** A licença e a API key do
   Freshdesk do cliente são preenchidas na tela de instalação (`config/iparams.json`) e ficam
   criptografadas pela própria plataforma Freshdesk.
-- **A licença é assinada pela Nuria** (claims: conta, categoria, campo, validade) — este app
+- **A licença é assinada pela Nuria** (claims: domínio, categoria, campo, validade) — este app
   só decodifica pra filtrar localmente antes de mandar qualquer coisa pra fora; ele nunca
   verifica a assinatura (não tem, e não precisa ter, a chave pública). Quem verifica de
   verdade é sempre o middleware.
-- **Uma licença de uma conta nunca serve pra outra** — o middleware confere isso a cada
-  chamada, usando o `account_id` que o próprio Freshdesk já entrega no payload do evento (não
-  é um valor que este app inventa ou que o cliente digita).
+- **Uma licença de um domínio nunca serve pra outro** — o middleware confere isso a cada
+  chamada, usando o `domain` que o próprio Freshdesk já entrega no payload do evento (não é um
+  valor que este app inventa ou que o cliente digita — é o que a Nuria também usou pra emitir
+  a licença, porque é o único identificador que o cliente consegue informar no onboarding; o
+  `account_id` do Freshdesk é opaco, ninguém sabe esse valor de cabeça).
 - **A API key do Freshdesk do cliente** só é usada para escrever a resposta de volta no
   ticket, quando um agente da Nuria responde do lado de lá — recomendamos criar um agente
   dedicado, restrito só à categoria usada aqui, em vez de reaproveitar uma key com acesso

@@ -55,12 +55,13 @@ precisa ser público.
 
 - **Nenhum hardcode de cliente, domínio ou segredo neste repositório** — tudo entra via
   `iparams`, preenchidos pelo cliente na instalação.
-- **A licença é a fonte de autorização**: assinada pela Nuria (conta, categoria, campo,
-  validade), verificada pelo middleware a cada chamada — uma licença de uma conta nunca serve
-  pra outra, mesmo que alguém tente reenviar/reaproveitar o token.
-- **O identificador da conta não é inventado por ninguém**: vem do próprio Freshdesk
-  (`account_id`/`domain`, presentes de graça em todo payload de evento), não de um ID que o
-  cliente digita ou que a Nuria precisa cadastrar manualmente.
+- **A licença é a fonte de autorização**: assinada pela Nuria (domínio, categoria, campo,
+  validade), verificada pelo middleware a cada chamada — uma licença de um domínio nunca serve
+  pra outro, mesmo que alguém tente reenviar/reaproveitar o token.
+- **O identificador é o `domain`, não um `account_id`**: o `domain` vem do próprio Freshdesk
+  (presente de graça em todo payload de evento) e é o que o cliente consegue informar durante
+  o onboarding — lê direto na própria URL. O `account_id` do Freshdesk é um identificador
+  interno opaco; o cliente não teria como sequer descobrir esse valor pra passar à Nuria.
 - **Allowlist de categoria/campo revalidado no middleware** — mesmo que este app seja
   modificado do lado do cliente, o middleware não replica nada fora do escopo autorizado pela
   licença.
