@@ -1,7 +1,7 @@
 {
   "platform-version": "2.3",
   "product": {
-    "freshdesk": {
+    "freshservice": {
       "events": {
         "onTicketCreate": { "handler": "onTicketCreateCallback" },
         "onTicketUpdate": { "handler": "onTicketUpdateCallback" },

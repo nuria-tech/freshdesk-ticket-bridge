@@ -55,9 +55,11 @@ precisa ser público.
 
 - **Nenhum hardcode de cliente, domínio ou segredo neste repositório** — tudo entra via
   `iparams`, preenchidos pelo cliente na instalação.
-- **A licença é a fonte de autorização**: assinada pela Nuria (domínio, categoria, campo,
-  validade), verificada pelo middleware a cada chamada — uma licença de um domínio nunca serve
-  pra outro, mesmo que alguém tente reenviar/reaproveitar o token.
+- **A licença é a fonte de identidade/escopo, não de autorização em tempo real**: assinada
+  pela Nuria (domínio, categoria, campo — sem prazo de validade), verificada pelo middleware a
+  cada chamada — uma licença de um domínio nunca serve pra outro, mesmo que alguém tente
+  reenviar/reaproveitar o token. Se um cliente pode sincronizar **agora** é decidido do lado
+  da Nuria (revogável a qualquer momento), não pela licença em si.
 - **O identificador é o `domain`, não um `account_id`**: o `domain` vem do próprio Freshdesk
   (presente de graça em todo payload de evento) e é o que o cliente consegue informar durante
   o onboarding — lê direto na própria URL. O `account_id` do Freshdesk é um identificador
@@ -92,14 +94,30 @@ O cliente pediu para poder auditar como o sync e o isolamento funcionam. Por iss
 `server/lib/config.js` aponta pra `ms-freshdesk.nuria.com.br` — um domínio deliberadamente
 genérico, não específico deste cliente. A ideia é que o mesmo middleware (e talvez, no
 futuro, o mesmo padrão de app) sirva outras integrações de ticketing da Nuria, não só esta.
-Hoje só existe este app/cliente; a generalização pra múltiplos provedores (Zendesk etc.) é
-decisão em aberto, tratada no ADR do middleware (privado) — não implementada ainda aqui.
+
+## Cliente real é Freshservice, não Freshdesk (descoberto em 2026-08-14)
+
+O cliente deste projeto usa **Freshservice** (`hubamericas.freshservice.com`), não Freshdesk —
+apesar do nome do repositório. `manifest.json` já foi corrigido pra
+`"product": {"freshservice": {...}}` (confirmado na doc oficial que `onTicketCreate`/
+`onTicketUpdate` existem do mesmo jeito; `onConversationCreate` **não confirmado**
+especificamente pra Freshservice — verificar antes do primeiro teste real). O middleware
+recebeu o fix correspondente (`domain` como hostname completo, não mais um sufixo
+`.freshdesk.com` assumido) — ver ADR do middleware (privado) pros detalhes.
+
+**Ainda bloqueia o primeiro teste real**: `server/modules/syncModule.js` compara
+`ticket.category` — esse campo nunca foi confirmado como existente de verdade nem no
+Freshdesk nem no Freshservice (que usa "Type": Incident/Service Request/Problem/Change, não
+uma categoria livre). Precisa confirmar contra a conta real do cliente quais campos existem
+antes de configurar a licença de produção.
 
 ## Pendências conhecidas
 
 - Verificar a assinatura exata de `$request.post(...)` (chamada "full URL", sem template no
   manifest) contra a documentação oficial da versão do FDK instalada antes do primeiro deploy
   real — essa API mudou entre versões do FDK.
-- Recomendar/documentar pro cliente a criação de um agente Freshdesk dedicado (restrito só à
-  categoria usada aqui) pra gerar a `client_freshdesk_api_key`, em vez de reaproveitar uma key
-  com acesso amplo.
+- Recomendar/documentar pro cliente a criação de um agente dedicado (restrito só à
+  categoria/tipo usado aqui) pra gerar a `client_freshdesk_api_key`, em vez de reaproveitar uma
+  key com acesso amplo.
+- Confirmar contra a conta Freshservice real quais campos de ticket existem (ver seção acima)
+  antes de configurar a licença de produção.

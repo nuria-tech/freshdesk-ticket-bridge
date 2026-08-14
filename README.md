@@ -1,10 +1,16 @@
 # freshdesk-ticket-bridge
 
-App FDK que roda no Freshdesk do **cliente**. Observa `onTicketCreate`, `onTicketUpdate` e
+App FDK (Freshworks — hoje instalado num Freshservice real, `hubamericas.freshservice.com`;
+`manifest.json` declara `"product": {"freshservice": {...}}`, apesar do nome do repo dizer
+"freshdesk"). Roda no ambiente do **cliente**. Observa `onTicketCreate`, `onTicketUpdate` e
 `onConversationCreate`; quando um ticket bate com a categoria + campo autorizados pela
 licença desta instalação, envia o evento (com a licença como credencial) pro middleware da
 Nuria — que é implementação privada ([freshdesk-middleware](https://github.com/nuria-tech/freshdesk-middleware)),
 não faz parte deste repositório (ver "Segurança e transparência" abaixo).
+
+> `onConversationCreate` ainda não foi confirmado como evento disponível pra Freshservice
+> especificamente (só `onTicketCreate`/`onTicketUpdate` foram confirmados na doc oficial) —
+> verificar contra a conta real antes do primeiro teste de instalação.
 
 ## O que este app NÃO faz
 
@@ -28,10 +34,12 @@ Pontos que valem revisar:
 - **Nenhum segredo ou dado do cliente está hardcoded aqui.** A licença e a API key do
   Freshdesk do cliente são preenchidas na tela de instalação (`config/iparams.json`) e ficam
   criptografadas pela própria plataforma Freshdesk.
-- **A licença é assinada pela Nuria** (claims: domínio, categoria, campo, validade) — este app
-  só decodifica pra filtrar localmente antes de mandar qualquer coisa pra fora; ele nunca
-  verifica a assinatura (não tem, e não precisa ter, a chave pública). Quem verifica de
-  verdade é sempre o middleware.
+- **A licença é assinada pela Nuria** (claims: domínio, categoria, campo — sem prazo de
+  validade, ela não expira sozinha) — este app só decodifica pra filtrar localmente antes de
+  mandar qualquer coisa pra fora; ele nunca verifica a assinatura (não tem, e não precisa ter,
+  a chave pública). Quem verifica de verdade é sempre o middleware. Quem decide se um domínio
+  pode sincronizar **agora** não é a licença — é um controle do lado da Nuria, revogável a
+  qualquer momento sem precisar reemitir nada.
 - **Uma licença de um domínio nunca serve pra outro** — o middleware confere isso a cada
   chamada, usando o `domain` que o próprio Freshdesk já entrega no payload do evento (não é um
   valor que este app inventa ou que o cliente digita — é o que a Nuria também usou pra emitir
@@ -46,7 +54,7 @@ Pontos que valem revisar:
 
 | Campo | O que é |
 |---|---|
-| `license` | Token assinado pela Nuria: conta, categoria, campo e validade autorizados |
+| `license` | Token assinado pela Nuria: domínio, categoria e campo autorizados (não expira sozinho) |
 | `client_freshdesk_api_key` | API key de um agente dedicado, usada só para a resposta de volta |
 
 ## Desenvolvimento local
