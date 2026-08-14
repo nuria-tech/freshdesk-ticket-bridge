@@ -1,7 +1,7 @@
 {
   "license": {
     "display_name": "Licença (fornecida pela Nuria)",
-    "description": "Token assinado pela Nuria contendo a categoria e o campo autorizados para esta conta, e até quando a licença vale. Gerado pelo time da Nuria no onboarding — cole aqui exatamente como foi entregue. Detalhes do modelo de segurança: https://github.com/nuria-tech/nuria-freshdesk",
+    "description": "Token assinado pela Nuria contendo a categoria e o campo autorizados para esta conta, e até quando a licença vale. Gerado pelo time da Nuria no onboarding — cole aqui exatamente como foi entregue. Detalhes do modelo de segurança: https://github.com/nuria-tech/freshdesk-ticket-bridge",
     "type": "text",
     "required": true
   },

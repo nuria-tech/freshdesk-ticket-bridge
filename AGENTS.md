@@ -3,7 +3,7 @@
 App FDK público que roda no Freshdesk de clientes da Nuria, sincronizando tickets de uma
 categoria/campo específico com o Freshdesk da Nuria. É a metade **auditável pelo cliente**
 de um sistema de duas partes — a outra metade (middleware, credenciais reais) vive em
-[freshdesk-ticket-bridge-middleware](https://github.com/nuria-tech/freshdesk-ticket-bridge-middleware),
+[freshdesk-middleware](https://github.com/nuria-tech/freshdesk-middleware),
 privado. Ver [ADR 0001](docs/adr/0001-arquitetura-sync-freshdesk.md) para o desenho completo.
 
 ## Estrutura

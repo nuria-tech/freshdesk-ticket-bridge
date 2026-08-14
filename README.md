@@ -1,14 +1,10 @@
-# nuria-freshdesk
+# freshdesk-ticket-bridge
 
 App FDK que roda no Freshdesk do **cliente**. Observa `onTicketCreate`, `onTicketUpdate` e
 `onConversationCreate`; quando um ticket bate com a categoria + campo autorizados pela
 licença desta instalação, envia o evento (com a licença como credencial) pro middleware da
-Nuria — que é implementação privada, não faz parte deste repositório (ver "Segurança e
-transparência" abaixo).
-
-> Nome do repositório é deliberadamente genérico: a ideia é que outros apps de integração de
-> ticketing que a Nuria construir para clientes (ou outros provedores, tipo Zendesk) morem
-> aqui também no futuro — hoje só existe este app.
+Nuria — que é implementação privada ([freshdesk-middleware](https://github.com/nuria-tech/freshdesk-middleware)),
+não faz parte deste repositório (ver "Segurança e transparência" abaixo).
 
 ## O que este app NÃO faz
 
