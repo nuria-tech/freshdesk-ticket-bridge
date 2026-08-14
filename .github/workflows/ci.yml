@@ -1,0 +1,11 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master, develop, testing, staging]
+
+jobs:
+  validate:
+    uses: nuria-tech/nuria-pipelines/.github/workflows/ci-validate-node.yml@main
+    secrets:
+      DISCORD_WEBHOOK_FAILURE: ${{ secrets.DISCORD_WEBHOOK_FAILURE }}

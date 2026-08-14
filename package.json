@@ -1,0 +1,21 @@
+{
+  "name": "nuria-freshdesk",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "fdk validate",
+    "typecheck": "echo \"sem TypeScript neste pacote (FDK server-side é JS puro)\"",
+    "lint": "eslint . --max-warnings=0",
+    "test": "fdk test",
+    "dev": "fdk run",
+    "pack": "fdk pack"
+  },
+  "devDependencies": {
+    "@nuria-tech/eslint-config": "^1.0.0",
+    "eslint": "^9.9.0",
+    "fdk-cli": "9.0.5"
+  },
+  "engines": {
+    "node": "18.18.2"
+  }
+}

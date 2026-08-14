@@ -1,0 +1,16 @@
+{
+  "platform-version": "2.3",
+  "product": {
+    "freshdesk": {
+      "events": {
+        "onTicketCreate": { "handler": "onTicketCreateCallback" },
+        "onTicketUpdate": { "handler": "onTicketUpdateCallback" },
+        "onConversationCreate": { "handler": "onConversationCreateCallback" }
+      }
+    }
+  },
+  "engines": {
+    "node": "18.18.2",
+    "fdk": "9.0.5"
+  }
+}

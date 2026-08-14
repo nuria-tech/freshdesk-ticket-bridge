@@ -1,0 +1,104 @@
+# ADR 0001 — Arquitetura de sync de tickets entre Freshdesk do cliente e Freshdesk da Nuria
+
+- **Status:** proposto
+- **Data:** 2026-07-29
+
+## Contexto
+
+Um cliente Nuria usa Freshdesk para o próprio suporte e quer que tickets criados numa
+categoria/campo específico apareçam também no Freshdesk da Nuria, com as conversas
+sincronizadas nos dois sentidos. Requisito não-negociável do cliente: nenhum dos dois lados
+pode ler ou escrever fora do que está explicitamente vinculado por aquela categoria/campo —
+nem a Nuria enxerga tickets do cliente fora do escopo combinado, nem o cliente ganha acesso a
+tickets internos da Nuria.
+
+Ponto de partida técnico: a API do Freshdesk não tem controle de acesso granular por
+categoria/campo — uma API key é válida pra conta inteira. Isso significa que o isolamento
+**não pode** ser delegado ao Freshdesk; tem que ser reforçado por uma camada própria.
+
+## Decisão
+
+Dois componentes, com responsabilidades e nível de confiança bem separados — e em dois
+repositórios diferentes (ver "Por que este repositório é público", abaixo):
+
+### 1. Este app FDK — roda na conta do cliente
+
+- Instalado no Freshdesk do **cliente**. Toda configuração específica (a licença e a API key
+  do cliente) é preenchida na tela de instalação (`iparams`), **nunca hardcoded no código**.
+  O Freshdesk criptografa esses valores automaticamente.
+- Escuta `onTicketCreate` / `onTicketUpdate` / `onConversationCreate`. Decodifica (sem
+  verificar assinatura — não precisa) a licença pra filtrar localmente por categoria/campo, e
+  só então envia o evento pro middleware, usando a licença como credencial (Bearer).
+- Não guarda estado. Não tem acesso direto ao Freshdesk da Nuria, nem à chave privada que
+  assina as licenças.
+
+### 2. Middleware de sync — privado, roda na AWS da Nuria
+
+- Implementação interna (repositório privado à parte — este repo não contém o código dele).
+  Recebe o evento assinado, **revalida** categoria/campo contra os claims da própria licença
+  (defesa em profundidade: não confia cegamente no filtro que já rodou do lado do app, porque
+  o app roda em ambiente que o cliente controla), mantém o mapeamento de tickets, e é o único
+  lugar que guarda a credencial do Freshdesk da Nuria e a chave privada de assinatura.
+- Sincroniza conversa **como nota/resposta**, não o ticket inteiro — evita vazar campo interno
+  de um lado pro outro.
+
+### Por que dois componentes (e dois repositórios)
+
+Este app sozinho não consegue guardar com segurança a credencial do **outro** lado nem manter
+um mapeamento durável e auditável. Separar em middleware permite: reforçar a validação numa
+camada que o cliente não controla, manter as duas credenciais isoladas uma da outra, e auditar
+cada sync. E como o middleware guarda credenciais e detalhes de infraestrutura da Nuria, ele
+vive num repositório privado — só o que o cliente instala no próprio Freshdesk (este repo)
+precisa ser público.
+
+## Modelo de segurança / isolamento
+
+- **Nenhum hardcode de cliente, domínio ou segredo neste repositório** — tudo entra via
+  `iparams`, preenchidos pelo cliente na instalação.
+- **A licença é a fonte de autorização**: assinada pela Nuria (conta, categoria, campo,
+  validade), verificada pelo middleware a cada chamada — uma licença de uma conta nunca serve
+  pra outra, mesmo que alguém tente reenviar/reaproveitar o token.
+- **O identificador da conta não é inventado por ninguém**: vem do próprio Freshdesk
+  (`account_id`/`domain`, presentes de graça em todo payload de evento), não de um ID que o
+  cliente digita ou que a Nuria precisa cadastrar manualmente.
+- **Allowlist de categoria/campo revalidado no middleware** — mesmo que este app seja
+  modificado do lado do cliente, o middleware não replica nada fora do escopo autorizado pela
+  licença.
+- **Credenciais nunca cruzam de lado**: este app nunca vê a API key da Nuria nem a chave
+  privada de assinatura; o middleware nunca expõe a API key do cliente de volta pro Freshdesk
+  do cliente além do uso estrito de responder no ticket certo.
+- **LGPD**: os tickets sincronizados podem conter dado de paciente do cliente. Antes de ligar
+  isso em produção para um cliente real, confirmar com jurídico/DPO se há contrato/DPA
+  cobrindo o tratamento desse dado pela Nuria como operadora, e minimizar o que é replicado
+  (só o necessário para o atendimento, não o ticket completo).
+
+## Por que este repositório é público
+
+O cliente pediu para poder auditar como o sync e o isolamento funcionam. Por isso:
+
+- O código aqui é **genérico e parametrizado** — só chama endpoints documentados da API
+  pública do Freshdesk, nunca contém nome de cliente, domínio real, categoria/campo real ou
+  qualquer segredo.
+- O que importa pro cliente auditar é justamente o que roda **dentro do Freshdesk dele** — que
+  é este repositório. O middleware (credenciais reais, infraestrutura da Nuria) fica num
+  repositório privado à parte.
+- Isso é uma exceção à convenção da org `nuria-tech` (os demais repos são privados) —
+  decisão deliberada para dar transparência ao cliente sobre o modelo de segurança, não um
+  padrão a repetir sem essa mesma justificativa.
+
+## Sobre o endpoint do middleware ser genérico
+
+`server/lib/config.js` aponta pra `ms-freshdesk.nuria.com.br` — um domínio deliberadamente
+genérico, não específico deste cliente. A ideia é que o mesmo middleware (e talvez, no
+futuro, o mesmo padrão de app) sirva outras integrações de ticketing da Nuria, não só esta.
+Hoje só existe este app/cliente; a generalização pra múltiplos provedores (Zendesk etc.) é
+decisão em aberto, tratada no ADR do middleware (privado) — não implementada ainda aqui.
+
+## Pendências conhecidas
+
+- Verificar a assinatura exata de `$request.post(...)` (chamada "full URL", sem template no
+  manifest) contra a documentação oficial da versão do FDK instalada antes do primeiro deploy
+  real — essa API mudou entre versões do FDK.
+- Recomendar/documentar pro cliente a criação de um agente Freshdesk dedicado (restrito só à
+  categoria usada aqui) pra gerar a `client_freshdesk_api_key`, em vez de reaproveitar uma key
+  com acesso amplo.

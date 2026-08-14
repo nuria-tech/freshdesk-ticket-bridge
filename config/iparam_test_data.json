@@ -1,0 +1,4 @@
+{
+  "license": "eyJhbGciOiJFZERTQSJ9.eyJhY2NvdW50SWQiOiJhY2NfdGVzdGUwMDEiLCJjYXRlZ29yeSI6IkVuY2FtaW5oYW1lbnRvIE51cmlhIiwiZmllbGROYW1lIjoiY2ZfZW5jYW1pbmhhcl9wYXJhX251cmlhIiwiZmllbGRWYWx1ZSI6InNpbSIsImV4cCI6NDg5NDMwNDQwMH0.test-signature-nao-valida-so-para-teste-local",
+  "client_freshdesk_api_key": "test-api-key-do-not-use-in-production"
+}

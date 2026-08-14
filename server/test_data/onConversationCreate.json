@@ -1,0 +1,22 @@
+{
+  "account_id": "acc_teste001",
+  "domain": "cliente-teste.freshdesk.com",
+  "iparams": {
+    "license": "eyJhbGciOiJFZERTQSJ9.eyJhY2NvdW50SWQiOiJhY2NfdGVzdGUwMDEiLCJjYXRlZ29yeSI6IkVuY2FtaW5oYW1lbnRvIE51cmlhIiwiZmllbGROYW1lIjoiY2ZfZW5jYW1pbmhhcl9wYXJhX251cmlhIiwiZmllbGRWYWx1ZSI6InNpbSIsImV4cCI6NDg5NDMwNDQwMH0.test-signature-nao-valida-so-para-teste-local",
+    "client_freshdesk_api_key": "test-api-key-do-not-use-in-production"
+  },
+  "data": {
+    "ticket": {
+      "id": 1001,
+      "category": "Encaminhamento Nuria",
+      "custom_fields": {
+        "cf_encaminhar_para_nuria": "sim"
+      }
+    },
+    "conversation": {
+      "id": 5001,
+      "body_text": "Resposta de teste do agente.",
+      "incoming": false
+    }
+  }
+}
