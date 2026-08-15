@@ -97,19 +97,45 @@ futuro, o mesmo padrão de app) sirva outras integrações de ticketing da Nuria
 
 ## Cliente real é Freshservice, não Freshdesk (descoberto em 2026-08-14)
 
-O cliente deste projeto usa **Freshservice** (`hubamericas.freshservice.com`), não Freshdesk —
-apesar do nome do repositório. `manifest.json` já foi corrigido pra
-`"product": {"freshservice": {...}}` (confirmado na doc oficial que `onTicketCreate`/
-`onTicketUpdate` existem do mesmo jeito; `onConversationCreate` **não confirmado**
-especificamente pra Freshservice — verificar antes do primeiro teste real). O middleware
-recebeu o fix correspondente (`domain` como hostname completo, não mais um sufixo
-`.freshdesk.com` assumido) — ver ADR do middleware (privado) pros detalhes.
+O cliente deste projeto usa **Freshservice**, não Freshdesk — apesar do nome do repositório
+(nome/domínio real do cliente não vai neste repo público de propósito; ver ADR do middleware,
+privado, pra esse detalhe). O middleware recebeu o fix correspondente (`domain` como hostname
+completo, não mais um sufixo `.freshdesk.com` assumido) — ver ADR do middleware pros detalhes.
 
 **Ainda bloqueia o primeiro teste real**: `server/modules/syncModule.js` compara
 `ticket.category` — esse campo nunca foi confirmado como existente de verdade nem no
 Freshdesk nem no Freshservice (que usa "Type": Incident/Service Request/Problem/Change, não
 uma categoria livre). Precisa confirmar contra a conta real do cliente quais campos existem
 antes de configurar a licença de produção.
+
+## Migração pra platform-version 3.0 — app global (2026-08-14)
+
+Decisão: em vez de manter o app específico de um produto (o que exigiria um segundo
+pacote/manifest pra qualquer cliente futuro em Freshdesk), migramos pra platform-version
+**3.0**, que suporta apps "globais" — uma única instalação funciona em múltiplos produtos
+Freshworks.
+
+- **`manifest.json`**: `"product"` → `"modules"`, com `common` (vazio, reservado pra eventos
+  tipo `onAppInstall` se algum dia precisarmos) + `support_ticket` (Freshdesk) +
+  `service_ticket` (Freshservice) — os dois com os mesmos três handlers
+  (`onTicketCreate`/`onTicketUpdate`/`onConversationCreate`), já que a lógica de negócio é
+  agnóstica de produto.
+- **`config/iparams.json`**: cada campo ganhou `"modules": ["support_ticket", "service_ticket"]`
+  — sem isso, o campo só aparece condicionado a um módulo específico.
+- **Breaking change de payload, o mais importante**: `payload.domain`/`payload.account_id`
+  (usados até aqui) **não existem mais** em platform-version 3.0. No lugar, o payload traz
+  `currentHost.endpoint_urls.<produto>` como uma **URL completa** (ex.:
+  `"https://acme.freshservice.com"`, confirmado num exemplo real da doc oficial — não é só o
+  hostname). `server/modules/syncModule.js` ganhou `extractDomain(payload)`, que lê
+  `currentHost.endpoint_urls.freshdesk || currentHost.endpoint_urls.freshservice` e tira o
+  `https://` na mão.
+- **Não confirmado, verificar com teste real**: a doc explicitamente diz que o payload de
+  simulação local (`server/test_data/*.json`, `fdk run`) pode não simular `currentHost` do
+  mesmo jeito que o runtime real — os valores de módulo/URL/domínio na simulação local vêm de
+  configuração separada (tela de settings do `fdk run`), não necessariamente do JSON do
+  arquivo de teste. Os fixtures aqui foram atualizados pra incluir `currentHost` no formato
+  confirmado, mas **isso precisa ser validado rodando `fdk run` de verdade** antes de confiar
+  no comportamento em produção.
 
 ## Pendências conhecidas
 
@@ -121,3 +147,10 @@ antes de configurar a licença de produção.
   key com acesso amplo.
 - Confirmar contra a conta Freshservice real quais campos de ticket existem (ver seção acima)
   antes de configurar a licença de produção.
+- Validar `extractDomain(payload)` e o shape de `currentHost` com `fdk run`/instalação real
+  (ver seção "Migração pra platform-version 3.0" acima) — não confiar só na doc.
+- `onConversationCreate` sob o módulo `service_ticket` não confirmado na doc pública —
+  testar antes do primeiro deploy real.
+- FDK `9.0.5` fixado no `manifest.json`/`package.json` — confirmar que essa versão suporta
+  platform-version 3.0 de verdade (a doc menciona FDK 9.7.0+ como o que já escala apps globais
+  por padrão; não testamos se 9.0.5 funciona igual).

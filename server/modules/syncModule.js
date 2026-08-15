@@ -11,9 +11,28 @@ function matchesLicensedScope(ticket, license) {
   return categoryMatches && fieldMatches;
 }
 
+// Platform-version 3.0 não traz mais `payload.domain`/`payload.account_id` direto — o app é
+// "global" (declara os módulos support_ticket E service_ticket, pra instalar tanto em
+// Freshdesk quanto em Freshservice), e o host de origem vem em
+// `currentHost.endpoint_urls.<produto>` como URL completa (ex.: "https://acme.freshdesk.com"),
+// chaveado pelo produto onde o app está rodando nessa instalação. Extrai só o hostname.
+//
+// NOTE: `org_domain` (mais direto) existe na doc, mas só na tela de instalação/config — não
+// aparece no payload de evento serverless. E o payload de teste local (`server/test_data`)
+// pode não simular `currentHost` do mesmo jeito que o runtime real — conferir com `fdk run`
+// contra a instalação real antes de confiar nisso em produção.
+function extractDomain(payload) {
+  const endpointUrls = payload.currentHost && payload.currentHost.endpoint_urls;
+  const rawUrl = endpointUrls && (endpointUrls.freshdesk || endpointUrls.freshservice);
+  if (!rawUrl) {
+    throw new Error('Não encontrei currentHost.endpoint_urls.freshdesk nem .freshservice no payload do evento');
+  }
+  return rawUrl.replace(/^https?:\/\//, '');
+}
+
 async function sendToMiddleware(eventType, ticket, conversation, payload) {
   const body = {
-    domain: payload.domain,
+    domain: extractDomain(payload),
     eventType: eventType,
     clientTicketId: ticket.id,
     ticket: ticket,
@@ -57,6 +76,7 @@ async function onConversationEvent(payload) {
 
 exports = {
   matchesLicensedScope: matchesLicensedScope,
+  extractDomain: extractDomain,
   onTicketEvent: onTicketEvent,
   onConversationEvent: onConversationEvent,
 };

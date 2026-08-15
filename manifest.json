@@ -1,7 +1,15 @@
 {
-  "platform-version": "2.3",
-  "product": {
-    "freshservice": {
+  "platform-version": "3.0",
+  "modules": {
+    "common": {},
+    "support_ticket": {
+      "events": {
+        "onTicketCreate": { "handler": "onTicketCreateCallback" },
+        "onTicketUpdate": { "handler": "onTicketUpdateCallback" },
+        "onConversationCreate": { "handler": "onConversationCreateCallback" }
+      }
+    },
+    "service_ticket": {
       "events": {
         "onTicketCreate": { "handler": "onTicketCreateCallback" },
         "onTicketUpdate": { "handler": "onTicketUpdateCallback" },
