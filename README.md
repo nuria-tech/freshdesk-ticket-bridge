@@ -64,6 +64,15 @@ Pontos que valem revisar:
 
 ## Desenvolvimento local
 
+O **FDK CLI não é uma dependência de projeto** (não existe pacote `fdk-cli` no npm público —
+já foi um bug nosso ter isso no `package.json`) — instala como ferramenta global, direto da
+Freshworks, e **exige Node 18.x** especificamente (não roda em Node 20+/22+/24+):
+
+```bash
+npm install https://cdn.freshdev.io/fdk/latest.tgz -g
+fdk version   # confirma a instalação
+```
+
 ```bash
 pnpm install
 pnpm dev     # fdk run

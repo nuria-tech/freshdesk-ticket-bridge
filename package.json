@@ -12,8 +12,7 @@
   },
   "devDependencies": {
     "@nuria-tech/eslint-config": "^1.0.0",
-    "eslint": "^9.9.0",
-    "fdk-cli": "9.0.5"
+    "eslint": "^9.9.0"
   },
   "engines": {
     "node": "18.18.2"

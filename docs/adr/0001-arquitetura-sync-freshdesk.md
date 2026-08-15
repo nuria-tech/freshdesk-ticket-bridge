@@ -151,6 +151,16 @@ Freshworks.
   (ver seção "Migração pra platform-version 3.0" acima) — não confiar só na doc.
 - `onConversationCreate` sob o módulo `service_ticket` não confirmado na doc pública —
   testar antes do primeiro deploy real.
-- FDK `9.0.5` fixado no `manifest.json`/`package.json` — confirmar que essa versão suporta
-  platform-version 3.0 de verdade (a doc menciona FDK 9.7.0+ como o que já escala apps globais
-  por padrão; não testamos se 9.0.5 funciona igual).
+- FDK `9.0.5` fixado no `manifest.json` — confirmar que essa versão suporta platform-version
+  3.0 de verdade (a doc menciona FDK 9.7.0+ como o que já escala apps globais por padrão; não
+  testamos se 9.0.5 funciona igual).
+- **Bug encontrado e corrigido (2026-08-15)**: `package.json` tinha `"fdk-cli": "9.0.5"` como
+  devDependency — não existe esse pacote no npm público (só existe uma versão placeholder
+  `0.0.0-0.0.3` de outro autor). Instalação real é
+  `npm install https://cdn.freshdev.io/fdk/latest.tgz -g` (ferramenta global, não dependência
+  de projeto) — documentado no README. **Confirmado que o FDK CLI exige Node 18.x
+  especificamente** (recusa rodar em Node 20+/22+/24+) — quem for testar localmente precisa de
+  um Node 18.x dedicado (ex. via `nvm install 18.18.2`), sem afetar o Node usado pra outros
+  projetos. Não confirmamos se o tarball "latest" corresponde à versão `9.0.5` fixada no
+  manifest — só existe instalação de "latest" pelo método documentado, não uma versão
+  específica pinada.
