@@ -1,7 +1,7 @@
 # AGENTS.md
 
-App FDK público que roda no Freshdesk de clientes da Nuria, sincronizando tickets de uma
-categoria/campo específico com o Freshdesk da Nuria. É a metade **auditável pelo cliente**
+App FDK público que roda no Freshdesk de clientes da Nuria, sincronizando tickets de um campo
+customizado específico com o Freshdesk da Nuria. É a metade **auditável pelo cliente**
 de um sistema de duas partes — a outra metade (middleware, credenciais reais) vive em
 [freshdesk-middleware](https://github.com/nuria-tech/freshdesk-middleware),
 privado. Ver [ADR 0001](docs/adr/0001-arquitetura-sync-freshdesk.md) para o desenho completo.
@@ -19,7 +19,7 @@ server/
     config.js            Endpoint do middleware (público, não é segredo)
     decodeLicense.js      Decodifica (NÃO verifica) a licença pra filtro local
   modules/
-    syncModule.js         Filtra por categoria/campo da licença e envia pro middleware
+    syncModule.js         Filtra pelo campo customizado da licença (categoria é só metadado) e envia pro middleware
   test_data/*.json        Fixtures de evento pra `fdk test`
 ```
 
