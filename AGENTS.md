@@ -19,7 +19,7 @@ server/
     config.js            Endpoint do middleware (público, não é segredo)
     decodeLicense.js      Decodifica (NÃO verifica) a licença pra filtro local
   modules/
-    syncModule.js         Filtra pelo campo customizado da licença (categoria é só metadado) e envia pro middleware
+    syncModule.js         Filtra pelo grupo/fila (group_id) da licença (categoria é só metadado) e envia pro middleware
   test_data/*.json        Fixtures de evento pra `fdk test`
 ```
 

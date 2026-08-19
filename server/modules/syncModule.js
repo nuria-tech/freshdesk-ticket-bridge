@@ -1,30 +1,29 @@
 const config = require('../lib/config');
 const decodeLicense = require('../lib/decodeLicense');
 
-// Único critério de disparo: o campo customizado bate com o que a própria licença autoriza
-// (não é o app que decide isso — é o que a Nuria assinou). Qualquer ticket fora disso nunca
-// sai desta função — a Nuria não fica sabendo que ele existe.
+// Único critério de disparo: o grupo/fila do ticket bate com o que a própria licença autoriza
+// (não é o app que decide isso — é o que a Nuria assinou). Qualquer ticket fora disso nunca sai
+// desta função — a Nuria não fica sabendo que ele existe.
 //
-// "categoria" (license.category) NÃO é critério de escopo, só metadado da licença — Freshdesk
-// tem um campo "Category" livre, mas Freshservice usa "Type" com valores fixos do próprio ITSM
-// (Incident/Service Request/Problem/Change), que o cliente não pode renomear pra um valor
-// customizado da Nuria. O campo customizado, ao contrário, existe do mesmo jeito nos dois
-// produtos com qualquer valor — por isso é o único critério realmente portátil.
+// Histórico de decisão (2026-08-19): campo customizado (exige o cliente criar um campo antes de
+// qualquer coisa funcionar) e tag (exige uma ação por ticket do agente) foram consideradas e
+// descartadas — as duas têm fricção que group_id não tem. group_id é um campo padrão, presente
+// em todo ticket, e o cliente real deste projeto já roteia os tickets relevantes pra um grupo/
+// fila específico como parte do próprio processo — zero ação nova, nem única nem por ticket.
+//
+// "categoria" (license.category) NÃO é critério de escopo, só metadado da licença.
 function matchesLicensedScope(ticket, license) {
-  const fieldValue = ticket.custom_fields && ticket.custom_fields[license.fieldName];
+  const matches = ticket.group_id === license.groupId;
 
-  // LOG TEMPORÁRIO — remover depois que o teste real de amanhã confirmar o formato do campo
-  // customizado no Freshservice do cliente. Loga só as CHAVES de custom_fields (schema, não
-  // dado sensível) e o tipo do valor encontrado — nunca o valor em si, que pode ser algo
-  // específico do ticket do cliente.
+  // LOG TEMPORÁRIO — remover depois que o teste real de amanhã confirmar que group_id chega
+  // preenchido no payload real de um ticket do Freshservice do cliente.
   console.log(
-    '[TEMP-DEBUG matchesLicensedScope] fieldName esperado=' + license.fieldName +
-    ' | chaves em custom_fields=' + (ticket.custom_fields ? JSON.stringify(Object.keys(ticket.custom_fields)) : 'null') +
-    ' | tipo do valor encontrado=' + typeof fieldValue +
-    ' | bateu=' + (fieldValue === license.fieldValue)
+    '[TEMP-DEBUG matchesLicensedScope] groupId esperado=' + license.groupId +
+    ' | group_id do ticket=' + ticket.group_id +
+    ' | bateu=' + matches
   );
 
-  return fieldValue === license.fieldValue;
+  return matches;
 }
 
 // Platform-version 3.0 não traz mais `payload.domain`/`payload.account_id` direto — o app é
@@ -91,7 +90,19 @@ async function sendToMiddleware(eventType, ticket, conversation, payload) {
 }
 
 async function onTicketEvent(eventType, payload) {
+  // LOG TEMPORÁRIO — remover depois que o teste real de amanhã confirmar que onTicketCreate/
+  // onTicketUpdate disparam (documentados como confirmados pra Freshservice, mas nunca
+  // exercitados de verdade contra a conta real). Só confirma que o handler foi chamado e qual
+  // eventType — nada de conteúdo de ticket aqui.
+  console.log('[TEMP-DEBUG onTicketEvent] handler disparou, eventType=' + eventType);
+
   const license = decodeLicense.decodeLicensePayload(payload.iparams.license);
+
+  // LOG TEMPORÁRIO — remover junto. Confirma que a licença decodificou (domain/groupId lidos
+  // certo) antes de qualquer filtro de escopo rodar — separa "licença malformada" de "ticket
+  // fora de escopo" como possíveis causas se nada chegar no middleware.
+  console.log('[TEMP-DEBUG onTicketEvent] licença decodificada, domain=' + license.domain + ', groupId=' + license.groupId);
+
   const ticket = payload.data.ticket;
 
   if (!matchesLicensedScope(ticket, license)) {
@@ -109,6 +120,8 @@ async function onConversationEvent(payload) {
   console.log('[TEMP-DEBUG onConversationEvent] handler disparou');
 
   const license = decodeLicense.decodeLicensePayload(payload.iparams.license);
+  console.log('[TEMP-DEBUG onConversationEvent] licença decodificada, domain=' + license.domain + ', groupId=' + license.groupId);
+
   const ticket = payload.data.ticket;
   const conversation = payload.data.conversation;
 

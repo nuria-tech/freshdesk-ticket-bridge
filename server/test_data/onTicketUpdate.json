@@ -9,7 +9,7 @@
     "subscribed_modules": ["service_ticket"]
   },
   "iparams": {
-    "license": "eyJhbGciOiJFZERTQSJ9.eyJkb21haW4iOiJjbGllbnRlLXRlc3RlLmZyZXNoc2VydmljZS5jb20iLCJjYXRlZ29yeSI6IkVuY2FtaW5oYW1lbnRvIE51cmlhIiwiZmllbGROYW1lIjoiY2ZfZW5jYW1pbmhhcl9wYXJhX251cmlhIiwiZmllbGRWYWx1ZSI6InNpbSJ9.test-signature-nao-valida-so-para-teste-local",
+    "license": "eyJhbGciOiJFZERTQSJ9.eyJkb21haW4iOiJjbGllbnRlLXRlc3RlLmZyZXNoc2VydmljZS5jb20iLCJjYXRlZ29yeSI6IkVuY2FtaW5oYW1lbnRvIE51cmlhIiwiZ3JvdXBJZCI6NDJ9.test-signature-nao-valida-so-para-teste-local",
     "client_freshdesk_api_key": "test-api-key-do-not-use-in-production"
   },
   "data": {
@@ -17,9 +17,7 @@
       "id": 1001,
       "subject": "Ticket de teste (atualizado)",
       "type": "Service Request",
-      "custom_fields": {
-        "cf_encaminhar_para_nuria": "sim"
-      },
+      "group_id": 42,
       "changes": {
         "status": [2, 3]
       }

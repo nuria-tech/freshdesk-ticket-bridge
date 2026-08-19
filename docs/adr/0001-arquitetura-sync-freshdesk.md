@@ -105,11 +105,19 @@ completo, não mais um sufixo `.freshdesk.com` assumido) — ver ADR do middlewa
 **Corrigido em 2026-08-19** (bloqueava o primeiro teste real): `server/modules/syncModule.js`
 comparava `ticket.category` — campo que nunca existiu de verdade em Freshservice (usa "Type",
 valores fixos do próprio ITSM — Incident/Service Request/Problem/Change —, não uma categoria
-livre que o cliente possa renomear pra um valor da Nuria). `matchesLicensedScope` agora usa
-**só o campo customizado** (`fieldName`/`fieldValue`) como critério de escopo — `category`
-continua na licença, mas só como metadado, nunca mais enforçado. Esse era o bloqueador mais
-sério do projeto: o filtro roda no **app do cliente**, antes de qualquer chamada ao middleware
-— com `category` ausente, nenhum evento chegava a sair.
+livre que o cliente possa renomear pra um valor da Nuria). `category` continua na licença, mas
+só como metadado, nunca mais enforçado.
+
+**Revisado ainda em 2026-08-19 (mesmo dia, rodada seguinte):** o critério de escopo que
+substituiu categoria passou por mais duas iterações no mesmo dia — primeiro campo customizado
+(`fieldName`/`fieldValue`), depois cogitou-se tag, e por fim **grupo/fila** (`group_id`), que é
+o que ficou. Motivo: tanto campo customizado quanto tag exigem alguma ação do lado do cliente
+(criar um campo, ou marcar cada ticket) — o cliente real deste projeto já tem um grupo/fila no
+Freshservice deles pra onde os tickets relevantes já são roteados, então usar `group_id` (campo
+padrão, presente em todo ticket) elimina qualquer ação nova, única ou por ticket. Ver ADR do
+middleware, seção "Critério de escopo: de campo customizado, pra tag, pra grupo/fila", pro
+histórico completo da decisão. `matchesLicensedScope` hoje compara `ticket.group_id ===
+license.groupId`.
 
 ## Migração pra platform-version 3.0 — app global (2026-08-14)
 

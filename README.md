@@ -4,7 +4,7 @@ App Freshworks "global" (platform-version 3.0) — instalável tanto em **Freshd
 **Freshservice** (módulos `support_ticket` e `service_ticket` no `manifest.json`, mesmos
 handlers pros dois). O cliente atual desta integração usa Freshservice, não Freshdesk —
 apesar do nome do repo. Roda no ambiente do **cliente**. Observa `onTicketCreate`,
-`onTicketUpdate` e `onConversationCreate`; quando um ticket bate com o campo customizado
+`onTicketUpdate` e `onConversationCreate`; quando um ticket bate com o grupo/fila (`group_id`)
 autorizado pela licença desta instalação, envia o evento (com a licença como credencial) pro
 middleware da Nuria — que é implementação privada
 ([freshdesk-middleware](https://github.com/nuria-tech/freshdesk-middleware)), não faz parte
@@ -18,14 +18,16 @@ deste repositório (ver "Segurança e transparência" abaixo).
 
 ## O que este app NÃO faz
 
-- Não lê nem envia tickets fora do campo customizado que a licença autoriza.
+- Não lê nem envia tickets fora do grupo/fila que a licença autoriza.
 - Não guarda nem expõe a API key do Freshdesk da Nuria — essa credencial nunca chega até aqui.
-- Não decide sozinho o que é sincronizado: o middleware sempre revalida o campo customizado (a
+- Não decide sozinho o que é sincronizado: o middleware sempre revalida o grupo/fila (a
   partir dos claims assinados da própria licença, não do que este app diz) antes de espelhar
   qualquer coisa — defesa em profundidade, mesmo que este app seja modificado do lado do
   cliente. "Categoria" é assinada na licença só como metadado — nunca foi um critério
   portátil entre Freshdesk e Freshservice (que usa "Type", valores fixos de ITSM), então
-  deixou de ser enforçada.
+  deixou de ser enforçada. Grupo/fila (`group_id`), ao contrário de campo customizado ou tag,
+  não exige nenhuma configuração nova nem ação por ticket do lado do cliente — é o roteamento
+  que ele já faz.
 
 ## Segurança e transparência
 
@@ -40,9 +42,9 @@ Pontos que valem revisar:
 - **Nenhum segredo ou dado do cliente está hardcoded aqui.** A licença e a API key do
   Freshdesk do cliente são preenchidas na tela de instalação (`config/iparams.json`) e ficam
   criptografadas pela própria plataforma Freshdesk.
-- **A licença é assinada pela Nuria** (claims: domínio, campo customizado — categoria também
-  vai assinada, mas só como metadado, não enforçada — sem prazo de validade, ela não expira
-  sozinha) — este app só decodifica pra filtrar localmente antes de
+- **A licença é assinada pela Nuria** (claims: domínio, grupo/fila (`groupId`) — categoria
+  também vai assinada, mas só como metadado, não enforçada — sem prazo de validade, ela não
+  expira sozinha) — este app só decodifica pra filtrar localmente antes de
   mandar qualquer coisa pra fora; ele nunca verifica a assinatura (não tem, e não precisa ter,
   a chave pública). Quem verifica de verdade é sempre o middleware. Quem decide se um domínio
   pode sincronizar **agora** não é a licença — é um controle do lado da Nuria, revogável a
@@ -62,7 +64,7 @@ Pontos que valem revisar:
 
 | Campo | O que é |
 |---|---|
-| `license` | Token assinado pela Nuria: domínio e campo customizado autorizados (não expira sozinho) |
+| `license` | Token assinado pela Nuria: domínio e grupo/fila autorizados (não expira sozinho) |
 | `client_freshdesk_api_key` | API key de um agente dedicado, usada só para a resposta de volta |
 
 ## Desenvolvimento local
