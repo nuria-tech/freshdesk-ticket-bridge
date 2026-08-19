@@ -12,6 +12,18 @@ const decodeLicense = require('../lib/decodeLicense');
 // produtos com qualquer valor — por isso é o único critério realmente portátil.
 function matchesLicensedScope(ticket, license) {
   const fieldValue = ticket.custom_fields && ticket.custom_fields[license.fieldName];
+
+  // LOG TEMPORÁRIO — remover depois que o teste real de amanhã confirmar o formato do campo
+  // customizado no Freshservice do cliente. Loga só as CHAVES de custom_fields (schema, não
+  // dado sensível) e o tipo do valor encontrado — nunca o valor em si, que pode ser algo
+  // específico do ticket do cliente.
+  console.log(
+    '[TEMP-DEBUG matchesLicensedScope] fieldName esperado=' + license.fieldName +
+    ' | chaves em custom_fields=' + (ticket.custom_fields ? JSON.stringify(Object.keys(ticket.custom_fields)) : 'null') +
+    ' | tipo do valor encontrado=' + typeof fieldValue +
+    ' | bateu=' + (fieldValue === license.fieldValue)
+  );
+
   return fieldValue === license.fieldValue;
 }
 
@@ -26,6 +38,11 @@ function matchesLicensedScope(ticket, license) {
 // pode não simular `currentHost` do mesmo jeito que o runtime real — conferir com `fdk run`
 // contra a instalação real antes de confiar nisso em produção.
 function extractDomain(payload) {
+  // LOG TEMPORÁRIO — remover depois que o teste real de amanhã confirmar o shape de
+  // currentHost. `currentHost` é metadado técnico da instalação (URLs de host, não dado de
+  // paciente/ticket), então é seguro logar bruto pra comparar com o que a doc descreve.
+  console.log('[TEMP-DEBUG extractDomain] payload.currentHost=' + JSON.stringify(payload.currentHost));
+
   const endpointUrls = payload.currentHost && payload.currentHost.endpoint_urls;
   const rawUrl = endpointUrls && (endpointUrls.freshdesk || endpointUrls.freshservice);
   if (!rawUrl) {
@@ -45,7 +62,17 @@ async function sendToMiddleware(eventType, ticket, conversation, payload) {
 
   // NOTE: verificar a assinatura exata de $request na versão do FDK instalada (platform-version /
   // fdk podem mudar essa API entre releases) antes do primeiro deploy real.
-  await $request.post(config.MIDDLEWARE_ENDPOINT, {
+  //
+  // LOG TEMPORÁRIO — remover depois que o teste real de amanhã confirmar a assinatura. Se
+  // $request.post não existir ou tiver outra assinatura nessa versão do FDK, o erro real vai
+  // aparecer no console.error(error) do server.js — este log só ajuda a situar ONDE isso
+  // aconteceu (endpoint chamado + que a função existe no runtime real).
+  console.log(
+    '[TEMP-DEBUG sendToMiddleware] chamando $request.post, endpoint=' + config.MIDDLEWARE_ENDPOINT +
+    ' | typeof $request.post=' + typeof $request.post
+  );
+
+  const response = await $request.post(config.MIDDLEWARE_ENDPOINT, {
     body: JSON.stringify(body),
     headers: {
       'Content-Type': 'application/json',
@@ -53,6 +80,14 @@ async function sendToMiddleware(eventType, ticket, conversation, payload) {
       'X-Nuria-Client-Api-Key': payload.iparams.client_freshdesk_api_key,
     },
   });
+
+  // LOG TEMPORÁRIO — remover junto com o de cima. Confirma o shape do retorno de $request.post
+  // (ex.: response.status existe? é number ou string?) sem logar o corpo da resposta.
+  console.log(
+    '[TEMP-DEBUG sendToMiddleware] $request.post retornou | chaves=' +
+    (response ? JSON.stringify(Object.keys(response)) : 'null') +
+    ' | status=' + (response && response.status)
+  );
 }
 
 async function onTicketEvent(eventType, payload) {
@@ -67,6 +102,12 @@ async function onTicketEvent(eventType, payload) {
 }
 
 async function onConversationEvent(payload) {
+  // LOG TEMPORÁRIO — remover depois que o teste real de amanhã confirmar que
+  // onConversationCreate dispara de fato sob o módulo service_ticket no Freshservice (não
+  // documentado oficialmente). Só confirma que o handler foi chamado; nada de conteúdo de
+  // ticket/conversa aqui.
+  console.log('[TEMP-DEBUG onConversationEvent] handler disparou');
+
   const license = decodeLicense.decodeLicensePayload(payload.iparams.license);
   const ticket = payload.data.ticket;
   const conversation = payload.data.conversation;
