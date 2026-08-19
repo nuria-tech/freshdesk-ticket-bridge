@@ -3,13 +3,15 @@
     "display_name": "Licença (fornecida pela Nuria)",
     "description": "Token assinado pela Nuria, vinculado ao domínio desta conta — permite sincronizar apenas os tickets deste domínio. Se ainda não recebeu o token, contate seu ponto de contato Nuria antes de instalar. Cole o token completo, sem quebras de linha, exatamente como foi entregue. Detalhes do modelo de segurança: https://github.com/nuria-tech/freshdesk-ticket-bridge",
     "type": "text",
+    "secure": true,
     "required": true,
     "modules": ["support_ticket", "service_ticket"]
   },
   "client_freshdesk_api_key": {
     "display_name": "API key do seu Freshdesk/Freshservice (agente dedicado)",
     "description": "API key de um agente do SEU Freshdesk/Freshservice — não é uma credencial da Nuria. Recomendação: crie um agente restrito só ao grupo/campo usado nesta sincronização, em vez de reaproveitar a key de um agente com acesso amplo. Usada exclusivamente para escrever a resposta de volta no ticket, quando um agente da Nuria responde pelo lado de lá.",
-    "type": "password",
+    "type": "text",
+    "secure": true,
     "required": true,
     "modules": ["support_ticket", "service_ticket"]
   }
