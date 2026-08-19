@@ -102,11 +102,14 @@ O cliente deste projeto usa **Freshservice**, não Freshdesk — apesar do nome 
 privado, pra esse detalhe). O middleware recebeu o fix correspondente (`domain` como hostname
 completo, não mais um sufixo `.freshdesk.com` assumido) — ver ADR do middleware pros detalhes.
 
-**Ainda bloqueia o primeiro teste real**: `server/modules/syncModule.js` compara
-`ticket.category` — esse campo nunca foi confirmado como existente de verdade nem no
-Freshdesk nem no Freshservice (que usa "Type": Incident/Service Request/Problem/Change, não
-uma categoria livre). Precisa confirmar contra a conta real do cliente quais campos existem
-antes de configurar a licença de produção.
+**Corrigido em 2026-08-19** (bloqueava o primeiro teste real): `server/modules/syncModule.js`
+comparava `ticket.category` — campo que nunca existiu de verdade em Freshservice (usa "Type",
+valores fixos do próprio ITSM — Incident/Service Request/Problem/Change —, não uma categoria
+livre que o cliente possa renomear pra um valor da Nuria). `matchesLicensedScope` agora usa
+**só o campo customizado** (`fieldName`/`fieldValue`) como critério de escopo — `category`
+continua na licença, mas só como metadado, nunca mais enforçado. Esse era o bloqueador mais
+sério do projeto: o filtro roda no **app do cliente**, antes de qualquer chamada ao middleware
+— com `category` ausente, nenhum evento chegava a sair.
 
 ## Migração pra platform-version 3.0 — app global (2026-08-14)
 
@@ -145,8 +148,6 @@ Freshworks.
 - Recomendar/documentar pro cliente a criação de um agente dedicado (restrito só à
   categoria/tipo usado aqui) pra gerar a `client_freshdesk_api_key`, em vez de reaproveitar uma
   key com acesso amplo.
-- Confirmar contra a conta Freshservice real quais campos de ticket existem (ver seção acima)
-  antes de configurar a licença de produção.
 - Validar `extractDomain(payload)` e o shape de `currentHost` com `fdk run`/instalação real
   (ver seção "Migração pra platform-version 3.0" acima) — não confiar só na doc.
 - `onConversationCreate` sob o módulo `service_ticket` não confirmado na doc pública —
@@ -164,3 +165,10 @@ Freshworks.
   projetos. Não confirmamos se o tarball "latest" corresponde à versão `9.0.5` fixada no
   manifest — só existe instalação de "latest" pelo método documentado, não uma versão
   específica pinada.
+- **Bug encontrado e corrigido (2026-08-19)**: `server/test_data/*.json` simulavam uma licença
+  com claims antigos (`accountId`, `exp`) — schema anterior à revisão que amarrou a licença a
+  `domain` e removeu expiração. Regenerados com o schema atual (`domain`, `category`,
+  `fieldName`, `fieldValue`, sem `exp`) — sem isso, qualquer teste local rodado com esses
+  arquivos não refletia o contrato real de licença. Os tickets de exemplo também trocaram
+  `"category"` por `"type"` (mais fiel a um payload real de Freshservice), já que categoria
+  deixou de ser critério de escopo (ver seção acima).

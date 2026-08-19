@@ -1,14 +1,18 @@
 const config = require('../lib/config');
 const decodeLicense = require('../lib/decodeLicense');
 
-// Único critério de disparo: categoria E campo customizado batem com o que a própria licença
-// autoriza (não é o app que decide isso — é o que a Nuria assinou). Qualquer ticket fora
-// disso nunca sai desta função — a Nuria não fica sabendo que ele existe.
+// Único critério de disparo: o campo customizado bate com o que a própria licença autoriza
+// (não é o app que decide isso — é o que a Nuria assinou). Qualquer ticket fora disso nunca
+// sai desta função — a Nuria não fica sabendo que ele existe.
+//
+// "categoria" (license.category) NÃO é critério de escopo, só metadado da licença — Freshdesk
+// tem um campo "Category" livre, mas Freshservice usa "Type" com valores fixos do próprio ITSM
+// (Incident/Service Request/Problem/Change), que o cliente não pode renomear pra um valor
+// customizado da Nuria. O campo customizado, ao contrário, existe do mesmo jeito nos dois
+// produtos com qualquer valor — por isso é o único critério realmente portátil.
 function matchesLicensedScope(ticket, license) {
-  const categoryMatches = ticket.category === license.category;
   const fieldValue = ticket.custom_fields && ticket.custom_fields[license.fieldName];
-  const fieldMatches = fieldValue === license.fieldValue;
-  return categoryMatches && fieldMatches;
+  return fieldValue === license.fieldValue;
 }
 
 // Platform-version 3.0 não traz mais `payload.domain`/`payload.account_id` direto — o app é
